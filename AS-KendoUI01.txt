@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Assured Support Form</title>
+
+    <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2023.1.117/styles/kendo.default-ocean-blue.min.css">
+
+    <script src="https://code.jquery.com/jquery-1.12.3.min.js"></script>
+    <script src="https://kendo.cdn.telerik.com/2023.1.117/js/angular.min.js"></script>
+    <script src="https://kendo.cdn.telerik.com/2023.1.117/js/jszip.min.js"></script>
+    <script src="https://kendo.cdn.telerik.com/2023.1.117/js/kendo.all.min.js"></script>
+
+    <style>
+        #main-form {
+            position: relative;
+        }
+
+        .form-textarea {
+            width: 100%;
+            height: 300px
+        }
+
+        .k-form-buttons {
+            position: absolute;
+            bottom: -50px;
+            right: 25px;
+            z-index: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="main-app">
+        <div class="demo-section">
+            <div id="validation-success"></div>
+
+            <div id="main-form">
+                <form id="assured-form">
+                </form>
+                <!-- <textarea id="editor" rows="10" cols="30" class="form-textarea" aria-label="editor"></textarea> -->
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Form
+        $(document).ready(function () {
+            var validationSuccess = $("#validation-success");
+
+            $("#assured-form").kendoForm({
+                orientation: "vertical",
+                formData: {
+                    Status: "In Progress",
+                    DueDate: new Date(),
+                    ComboBox: "3",
+                    CompletedDate: new Date(),
+                    TrainingCommentSummary: "",
+
+                },
+                items: [{
+                    type: "group",
+                    label: "Assured Support Training",
+                    items: [
+                        { field: "DueDate", label: { text: "Due Date:" } },
+                        {
+                            field: "ComboBox", editor: "ComboBox", label: "Status:",
+                            validation: {
+                                required: (function () {
+                                    var status = $("#assured-form").find("input[name=ComboBox_input]").val();
+
+                                    console.log(status);
+                                    if (status === "Completed") {
+                                        console.log("Status is Completed");
+                                        $("#assured-form").find("div[data-container-for=CompletedDate]").show();
+                                        $("#assured-form").find("#CompletedDate-form-label").show();
+                                        return true;
+                                    } else {
+                                        $("#assured-form").find("div[data-container-for=CompletedDate]").hide();
+                                        $("#assured-form").find("#CompletedDate-form-label").hide();
+                                        return true;
+                                    }
+                                })
+                            },
+                            editorOptions: {
+                                dataTextField: "text",
+                                dataValueField: "value",
+                                dataSource: [
+                                    { text: "Not Started", value: "1" },
+                                    { text: "In Progress", value: "2" },
+                                    { text: "Completed", value: "3" },
+                                ]
+                            }
+                        },
+                        { field: "CompletedDate", label: { text: "Completed Date:" }},
+                        {
+                            field: "TrainingCommentSummary",
+                            label: "Description:",
+                            editor: function (container, options) {
+                                $("<textarea id='editor' name='" + options.field + "' required data-bind='value: " + options.field + "'></textarea>")
+                                    .appendTo(container);
+                            },
+                            validation: { required: true }
+                        }
+                    ],
+
+                }],
+                submit: function (e) {
+                    e.preventDefault();
+                    console.log(e);
+                    api_url = "https://as-test-api.free.beeceptor.com";
+                    $.ajax({
+                        url: api_url,
+                        type: "POST",
+                        data: JSON.stringify(e.model),
+                        contentType: "application/json; charset=utf-8",
+                        dataType: "json",
+                        success: function (data, textStatus, jqXHR) {
+                            console.log(data);
+                        },
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            console.log(errorThrown);
+                        }
+                    });
+                    validationSuccess.html("<div class='k-messagebox k-messagebox-success'>Form Data Successfully Submitted to: https://beeceptor.com/console/as-test-api</div>");
+                },
+                clear: function (ev) {
+                    validationSuccess.html("");
+                }
+            });
+
+            // Text Area with Markup
+            var editor = $("#editor").kendoEditor({
+                stylesheets: [
+                    "../content/shared/styles/editor.css",
+                ],
+                tools: [
+                    "bold",
+                    "italic",
+                    "underline",
+                    "strikethrough",
+                    "undo",
+                    "redo",
+
+                    "insertUnorderedList",
+                    "insertOrderedList",
+                    "indent",
+                    "clearFormatting",
+                ]
+            });
+        });
+
+
+    </script>
+</body>
+
+</html>
